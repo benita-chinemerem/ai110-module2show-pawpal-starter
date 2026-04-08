@@ -1,16 +1,35 @@
 # PawPal+ Project Reflection
 
+
 ## 1. System Design
+PawPal+ supports three main things an owner does in the app:
+
+1. **Profile** — Enter or update basic owner and pet information so plans have the right context.
+2. **Tasks** — Add or edit care tasks (for example walks or feeding), including duration and priority.
+3. **Plan** — Generate a daily schedule from available time and priorities, view it clearly, and read why the app ordered or skipped tasks.
+
+---
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+My initial UML centered on four domain types plus a scheduling service, matching how the app flows: profile (who), tasks (what), plan (output), and an engine that builds the plan.
+
+- **Owner** — Stores the human’s **name** and **preferences** (for example quiet hours or preferred walk times once the scheduler uses them). In the diagram, an owner *owns* one or more pets.
+- **Pet** — Stores the animal’s **name** and **species** so the plan and explanations can refer to the right pet.
+- **Task** — One care item (**title**, **duration_minutes**, **priority**). Tasks are what get sorted and packed into the day. **validate()** will enforce sensible inputs (for example positive duration) before scheduling.
+- **DailyPlan** — The result of planning: **blocks** (ordered placements) and **notes** for anything that did not fit or needs a global explanation. **total_scheduled_minutes()** will sum scheduled time for checks and display.
+- **ScheduledBlock** — One row of the plan: the **Task**, optional **start_time** / **end_time**, and **reasons** (short strings) so the UI can explain *why* something was placed or ordered as it was. This type is not a separate box on my four-class sketch but it implements the “each block references a Task” part of **DailyPlan**.
+- **Scheduler** — Stateless service with **plan(owner, pet, tasks, available_minutes)** that reads context and returns a **DailyPlan**. Time available for the day is a parameter here so **Owner** / **Pet** stay about identity, not “today’s minutes.”
+
+Associations in the model: **Owner → Pet** (owns), **Pet → Task** (the pet’s care needs; in the app the task list is often passed into **plan** alongside **Pet** so Streamlit can keep a simple list). **DailyPlan** references **Task** through each **ScheduledBlock**.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+Yes. After reviewing `pawpal_system.py`, I made one structural tweak and noted a few items for later.
+
+- **Change:** Added **`pets: list[Pet]`** on **Owner** (with `default_factory=list`) so the code matches the UML **“Owner owns Pet(s)”** relationship instead of only having two disconnected datatypes. The UI can append the current **Pet** when the user saves profile data, which keeps the object graph aligned with the diagram.
+- **Not changed (intentionally):** Tasks are still passed as **`tasks: list[Task]`** into **`Scheduler.plan`** rather than embedded only on **Pet**, so the Streamlit session can keep one flat task list without duplicating storage; the **Pet** instance remains the contextual “who this plan is for.”
+- **Future / bottleneck note (no code change yet):** Putting sorting, packing, time arithmetic, and explanation strings all in **`Scheduler.plan`** could get large; if it does, I may split a small helper (for example building **reasons** or sorting keys) into private methods or a separate module. **`preferences: dict`** is flexible but untyped until I know exactly which keys the scheduler reads.
 
 ---
 
