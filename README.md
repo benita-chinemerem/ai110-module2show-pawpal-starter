@@ -22,6 +22,62 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smarter Scheduling
+
+Beyond the basic greedy planner, PawPal+ includes four algorithmic features that make the schedule more useful in practice:
+
+**Sorting by time**
+`DailyPlan.sort_by_time()` returns blocks in ascending start-time order using Python's `sorted()` with a lambda key. Blocks that have no clock time (unscheduled) sink to the end automatically.
+
+**Filtering**
+Two filter methods on `DailyPlan` let you slice the plan without rebuilding it:
+- `filter_by_pet(name)` — isolates one pet's blocks from a combined plan
+- `filter_by_status(completed)` — separates finished tasks from pending ones
+
+**Recurring tasks**
+`Task.mark_complete()` returns a follow-up `Task` for recurring tasks instead of just flipping a flag. Daily tasks get a new `due_date` of today + 1 day; weekly tasks get today + 7 days (`timedelta`). `Pet.mark_task_complete()` calls this and automatically appends the follow-up to the pet's task list, so recurring care never falls off the schedule.
+
+**Conflict detection**
+`Scheduler.detect_conflicts(blocks)` scans every pair of blocks and flags overlaps using the interval test `A.start < B.end AND B.start < A.end`. It returns human-readable warning strings rather than raising an exception, so the UI can display the warning without crashing.
+
+---
+
+## Testing PawPal+
+
+Run the full test suite from the project root:
+
+```bash
+python -m pytest
+```
+
+### What the tests cover
+
+| # | Test | What it verifies |
+|---|------|-----------------|
+| 1 | `test_mark_complete_changes_status` | `mark_complete()` flips `completed` to `True` |
+| 2 | `test_add_task_increases_pet_task_count` | `Pet.add_task()` grows the task list correctly |
+| 3 | `test_sort_by_time_returns_chronological_order` | `DailyPlan.sort_by_time()` returns blocks earliest-first |
+| 4 | `test_sort_by_time_with_none_start_times_sinks_to_end` | Unscheduled (None) blocks sort to the end |
+| 5 | `test_daily_recurrence_creates_task_due_tomorrow` | Daily task produces follow-up due tomorrow |
+| 6 | `test_weekly_recurrence_creates_task_due_in_seven_days` | Weekly task produces follow-up due in 7 days |
+| 7 | `test_as_needed_task_has_no_recurrence` | `as-needed` task returns `None` follow-up |
+| 8 | `test_pet_mark_task_complete_appends_followup` | `Pet.mark_task_complete()` appends the next recurrence |
+| 9 | `test_detect_conflicts_flags_overlapping_blocks` | Overlapping blocks produce a `CONFLICT` warning |
+| 10 | `test_detect_conflicts_no_false_positives` | Back-to-back (sequential) blocks are not flagged |
+| 11 | `test_scheduler_handles_pet_with_no_tasks` | Empty task list yields an empty, note-free plan |
+| 12 | `test_task_validate_rejects_bad_priority` | `validate()` raises `ValueError` for bad priority |
+| 13 | `test_task_validate_rejects_zero_duration` | `validate()` raises `ValueError` for zero duration |
+| 14 | `test_filter_by_pet_isolates_correct_blocks` | `filter_by_pet()` returns only the named pet's blocks |
+| 15 | `test_scheduler_skips_task_that_exceeds_budget` | Tasks that exceed the time budget appear in notes, not blocks |
+
+### Confidence level
+
+★★★★☆ (4 / 5)
+
+Happy paths and the most important edge cases are covered: sorting, all three recurrence branches, both conflict and no-conflict scenarios, validation guards, and the budget-overflow skip logic. The remaining gap is integration-level testing — verifying that the Streamlit `session_state` wiring in `app.py` behaves correctly end-to-end in a real browser session, which would require a UI testing tool such as Playwright or Streamlit's own `AppTest` API.
+
+---
+
 ## Getting started
 
 ### Setup

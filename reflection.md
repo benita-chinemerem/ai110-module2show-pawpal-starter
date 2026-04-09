@@ -42,8 +42,9 @@ Yes. After reviewing `pawpal_system.py`, I made one structural tweak and noted a
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+**Tradeoff: overlap detection checks every pair of blocks (O(n²)) instead of a sorted sweep.**
+
+`detect_conflicts` compares every pair of blocks with a nested loop. A more efficient approach would sort blocks by start time first and then only compare each block against its immediate neighbors — reducing work from O(n²) to O(n log n). The nested-loop version was kept because a typical daily pet care plan has fewer than 20 tasks: at that scale the two approaches are indistinguishable in speed, and the pair-comparison logic (`a.start < b.end AND b.start < a.end`) reads almost like plain English, making it easy to verify correctness at a glance. The tradeoff is reasonable here because clarity and correctness matter more than micro-performance for a small personal scheduling app. If the scheduler were extended to handle dozens of pets or bulk-import hundreds of tasks, switching to a sweep-line algorithm would be worth the added complexity.
 
 ---
 
