@@ -1,6 +1,49 @@
-# PawPal+ (Module 2 Project)
+# PawPal+
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+A smart daily care planner for pet owners — built with Python and Streamlit.
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Owner & pet profiles** | Create an owner with one or more pets; data persists across UI interactions via `st.session_state` |
+| **Task management** | Add tasks with title, duration, priority (`high/medium/low`), and frequency (`daily/weekly/as-needed`) |
+| **Priority-first scheduling** | Greedy scheduler packs tasks high → medium → low within a configurable daily time budget |
+| **Sorting by time** | `DailyPlan.sort_by_time()` displays the schedule in clock order using a lambda sort key |
+| **Recurring tasks** | Completing a `daily` or `weekly` task auto-generates the next occurrence with a calculated `due_date` (`timedelta`) |
+| **Conflict detection** | `Scheduler.detect_conflicts()` flags overlapping time blocks using the interval test `A.start < B.end AND B.start < A.end`; shown as prominent warnings in the UI |
+| **Filtering** | Filter the displayed schedule by pet name or completion status without re-running the scheduler |
+| **Reasoning display** | Each scheduled block shows why it was placed (priority, duration, frequency) |
+| **Skip explanations** | Tasks that don't fit the time budget appear in a collapsible "Skipped tasks" section with exact remaining-time context |
+| **Validation** | `Task.validate()` enforces non-empty titles, positive durations, and valid priority/frequency values before any task enters the system |
+
+## Demo
+
+*Run the app and take a screenshot, then embed it here:*
+
+```
+streamlit run app.py
+```
+
+<a href="/course_images/ai110/pawpal_screenshot.png" target="_blank">
+  <img src='/course_images/ai110/pawpal_screenshot.png' title='PawPal App' width='' alt='PawPal App' class='center-block' />
+</a>
+
+---
+
+## System architecture
+
+The final UML diagram (Mermaid source) is in `uml_final.md`. Paste the code block at [mermaid.live](https://mermaid.live) to render it.
+
+**Six classes:**
+- `Owner` → owns `Pet`(s)
+- `Pet` → holds `Task`(s), handles recurrence via `mark_task_complete()`
+- `Task` → validates itself, returns a follow-up on `mark_complete()`
+- `Scheduler` → stateless service: `plan()` + `detect_conflicts()`
+- `DailyPlan` → result with sorting, filtering, and conflict list
+- `ScheduledBlock` → one placed task with clock times, pet reference, and reasons
+
+---
 
 ## Scenario
 
