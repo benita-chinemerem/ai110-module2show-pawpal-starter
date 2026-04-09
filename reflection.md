@@ -70,6 +70,8 @@ AI was used across every phase of the project, but with a different purpose at e
 
 The most effective prompt pattern was: *"Given this specific method and its docstring, what are the edge cases a test suite should cover?"* This kept the AI focused on a narrow, well-defined task and produced directly usable output.
 
+In terms of specific Copilot features: **Inline Chat** was the most effective for implementing individual methods (asking it to implement just `Task.mark_complete()` or `detect_conflicts()` in isolation kept results focused and reviewable). **Generate Tests** was valuable for drafting the edge-case test functions — it caught scenarios like `as-needed` returning `None` and back-to-back blocks not triggering a false conflict that were easy to overlook after writing the logic yourself. **Agent Mode** was used for broader changes that touched multiple methods at once, such as wiring the `frequency` field through `Task`, `Pet`, and the scheduler in one pass. Using separate chat sessions per phase (design, implementation, testing, documentation) prevented earlier context from polluting later suggestions — for example, keeping the testing session free of implementation detail meant Copilot focused on behavior contracts rather than internal code paths.
+
 **b. Judgment and verification**
 
 One AI suggestion was modified before use: when asked to implement `detect_conflicts`, the AI initially suggested raising a `ValueError` when a conflict was found. This was changed to returning a list of warning strings instead.
